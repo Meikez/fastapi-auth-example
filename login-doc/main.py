@@ -1,76 +1,19 @@
 from typing import Annotated
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from passlib.context import CryptContext
 import jwt
 from jwt.exceptions import InvalidTokenError
-
-SECRET_KEY = "85eab742333eed5c1dfc27969da3e3b0f1a24c36d78d44655c1c4572a8616f48"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    username: str | None = None
-
-users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "disabled": False,
-    },
-    "alice": {
-        "username": "alice",
-        "full_name": "Alice Wonderson",
-        "email": "alice@example.com",
-        "hashed_password": "fakehashedsecret2",
-        "disabled": True,
-    },
-}
-
-
+from hashing_utils import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, authenticate_user, create_access_token
+from schemes import TokenData, User, Token, UserInDB
+from database import get_user, users_db
 app = FastAPI()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-# If it doesn('t see an Authorization header,'
+# If it doesn't see an Authorization header,'
 # 'it will respond with a 401 status code error (UNAUTHORIZED) directly.
 
-
-def fake_hash_password(password: str):
-    return "fakehashed" + password
-
-class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
-
-
-class UserInDB(User):
-    hashed_password: str
-
-
-def get_user(db, username: str):
-    if username in db:
-        user_dict = db[username]
-        return UserInDB(**user_dict)
-    else:
-        return None
-
-
-def decode_token(token):
-    user = get_user(users_db,token)
-    return user
+# Functions
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -93,42 +36,10 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     return user
 
 
-
 async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
-
-
-# JWTS AND HASHING PASSWORD
-
-
-def verify_password(plaintext_password: str, hashed_password: str):
-    return pwd_context.verify(plaintext_password, hashed_password)
-
-
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
-
-
-def authenticate_user(fake_db: dict, username: str, password: str):
-    user = get_user(fake_db,username)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
-
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
 
 
 # ENDPOINTS
