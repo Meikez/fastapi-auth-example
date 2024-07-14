@@ -1,7 +1,4 @@
 from schemes import *
-from fastapi import Depends, HTTPException
-from typing import Annotated
-
 
 users_db = {
     "johndoe": {

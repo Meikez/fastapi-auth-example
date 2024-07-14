@@ -1,12 +1,8 @@
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 import jwt
-from jwt.exceptions import InvalidTokenError
-from fastapi import Depends, HTTPException, status
-from typing import Annotated
-from schemes import *
-from database import users_db, get_user
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from database import get_user
+
 
 SECRET_KEY = "85eab742333eed5c1dfc27969da3e3b0f1a24c36d78d44655c1c4572a8616f48"
 ALGORITHM = "HS256"
