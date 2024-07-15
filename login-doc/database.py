@@ -1,5 +1,7 @@
 from schemes import *
-
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 users_db = {
     "johndoe": {
         "username": "johndoe",
@@ -16,6 +18,10 @@ users_db = {
         "disabled": True,
     },
 }
+
+engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+Base = declarative_base()
+SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 
 def get_user(db, username: str):
