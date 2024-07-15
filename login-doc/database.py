@@ -19,7 +19,9 @@ users_db = {
     },
 }
 
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+#engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+
+engine = create_engine("sqlite:///my_database.db", echo=True)
 Base = declarative_base()
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
