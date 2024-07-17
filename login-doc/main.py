@@ -63,7 +63,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
     session = SessionLocal()
     data: UserInDB = session.query(models.UserDB).filter_by(email=form_data.username).first()
 
-    if not authenticate_user(password= form_data.password, hashed_password=data.hashed_password):
+    if not authenticate_user(password= form_data.password, hashed_password=data.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -90,6 +90,7 @@ async def register(user_email: str, password: str):
     session.add(new_user)
     session.commit()
     session.close()
+    return {f"message": "user {user_email}"}
 
 
 @app.get("/items/")
