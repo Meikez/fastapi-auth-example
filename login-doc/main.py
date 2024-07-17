@@ -59,8 +59,10 @@ async def get_current_active_user(current_user: Annotated[User, Depends(get_curr
 # ENDPOINTS
 @app.post("/token")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
-    user: UserInDB = authenticate_user(users_db, form_data.username, form_data.password)
-    if not user:
+    #user: UserInDB = authenticate_user(users_db, form_data.username, form_data.password)
+    session = SessionLocal()
+    data: UserInDB= session.query(models.UserDB).filter_by(email=form_data.username).first()
+    if not data:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -68,7 +70,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username},
+        data={"sub": data.username},
         expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
