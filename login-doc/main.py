@@ -61,8 +61,9 @@ async def get_current_active_user(current_user: Annotated[User, Depends(get_curr
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     #user: UserInDB = authenticate_user(users_db, form_data.username, form_data.password)
     session = SessionLocal()
-    data: UserInDB= session.query(models.UserDB).filter_by(email=form_data.username).first()
-    if not data:
+    data: UserInDB = session.query(models.UserDB).filter_by(email=form_data.username).first()
+
+    if not authenticate_user(password= form_data.password, hashed_password=data.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
