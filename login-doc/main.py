@@ -38,20 +38,22 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-        username: str = payload.get("sub")
-        if username is None:
+        user_email: str = payload.get("sub")
+        if user_email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(username=user_email)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(users_db, username=token_data.username)
+    session = SessionLocal()
+    user: UserInDB = session.query(models.UserDB).filter_by(email=user_email).first()
+    #user = get_user(users_db, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
 
 
 async def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
-    if current_user.disabled:
+    if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
@@ -71,7 +73,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": data.username},
+        data={"sub": data.email},
         expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
@@ -90,7 +92,7 @@ async def register(user_email: str, password: str):
     session.add(new_user)
     session.commit()
     session.close()
-    return {f"message": "user {user_email}"}
+    return {"message": f"user {user_email} created successfully!"}
 
 
 @app.get("/items/")
