@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 import jwt
-from database import get_user
+
 
 
 SECRET_KEY = "85eab742333eed5c1dfc27969da3e3b0f1a24c36d78d44655c1c4572a8616f48"

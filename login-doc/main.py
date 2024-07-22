@@ -8,13 +8,11 @@ from jwt.exceptions import InvalidTokenError
 import models
 from hashing_utils import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, authenticate_user, create_access_token,get_password_hash
 from schemes import TokenData, User, Token, UserInDB
-from database import get_user, users_db, Base, SessionLocal, engine
+from database import Base, SessionLocal, engine
 
 app = FastAPI()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-# If it doesn't see an Authorization header,'
-# 'it will respond with a 401 status code error (UNAUTHORIZED) directly.
 
 # Initialize database
 Base.metadata.create_all(engine)
