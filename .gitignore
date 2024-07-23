@@ -1,4 +1,4 @@
-db-app
-fastapi-auth
-first-steps
-login
+db-app/*
+fastapi-auth/*
+first-steps/*
+login/*
